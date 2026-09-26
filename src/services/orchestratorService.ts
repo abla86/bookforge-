@@ -1,11 +1,15 @@
-import { ProjectIntent, WorkPlan, StoryBible, Chapter, VisualCoverConfig } from '../types';
+import { ProjectIntent, WorkPlan, StoryBible, Project, VisualCoverConfig, UserProfile, SecurityAuditEvent } from '../types';
 
 export interface HealthCheckResponse {
   status: string;
   platform: string;
-  hasGeminiKey: boolean;
-  model: string;
+  engine?: string;
   persistence?: string;
+  freeEngine?: {
+    available: boolean;
+    cost: number;
+    description: string;
+  };
 }
 
 export async function checkServerHealth(): Promise<HealthCheckResponse> {
@@ -14,7 +18,17 @@ export async function checkServerHealth(): Promise<HealthCheckResponse> {
     if (!res.ok) throw new Error('Health check failed');
     return await res.json();
   } catch {
-    return { status: 'offline', platform: 'BookForge AI', hasGeminiKey: false, model: 'local', persistence: 'local-fallback' };
+    return {
+      status: 'offline',
+      platform: 'VELORA',
+      engine: 'free-deterministic-literary-synth',
+      persistence: 'local-fallback',
+      freeEngine: {
+        available: true,
+        cost: 0,
+        description: 'Innebygd kostnadsfri forfatter- og illustrasjonsmotor'
+      }
+    };
   }
 }
 
@@ -129,8 +143,7 @@ export async function generateBookImage(
   prompt: string,
   style?: string,
   aspectRatio?: '1:1' | '3:4' | '4:3' | '16:9' | '9:16',
-  context?: { title?: string; chapterNumber?: number; target?: 'cover' | 'cover_front' | 'cover_back' | 'chapter' | 'back' | 'illustration' | string },
-  forceFreeMode?: boolean
+  context?: { title?: string; chapterNumber?: number; target?: 'cover' | 'cover_front' | 'cover_back' | 'chapter' | 'back' | 'illustration' | string }
 ): Promise<{ imageUrl: string; prompt: string; style: string; target: string; chapterNumber?: number }> {
   const res = await fetch('/api/orchestrator/generate-image', {
     method: 'POST',
@@ -141,8 +154,7 @@ export async function generateBookImage(
       aspectRatio: aspectRatio || '3:4',
       title: context?.title,
       chapterNumber: context?.chapterNumber,
-      target: context?.target || 'illustration',
-      forceFreeMode
+      target: context?.target || 'illustration'
     })
   });
   if (!res.ok) {
@@ -152,53 +164,40 @@ export async function generateBookImage(
   return await res.json();
 }
 
-// User Profile & Authentication Services (Local secure persistence)
-const USER_KEY = 'bookforge_active_user';
-const LOGS_KEY = 'bookforge_security_logs';
+// -----------------------------------------------------------------
+// USER AUTHENTICATION & PROFILE SERVICES (VELORA)
+// -----------------------------------------------------------------
 
-export async function loginUser(email: string, _password: string): Promise<{ user: any }> {
-  const existing = localStorage.getItem(USER_KEY);
-  let user = existing ? JSON.parse(existing) : null;
-  if (!user || user.email !== email) {
-    const namePart = email.split('@')[0] || 'Author';
-    const formattedName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
-    user = {
-      id: `usr-${Date.now()}`,
-      name: formattedName,
-      email,
-      role: 'author',
-      penName: formattedName,
-      imprintName: `${formattedName} Publishing`,
-      bio: 'Author & Storyteller on BookForge AI',
-      preferences: {
-        defaultContentType: 'book',
-        defaultGenre: 'Drama & Mystery',
-        defaultTargetWordCount: 35000,
-        defaultPacing: 'measured',
-        defaultVisualArtStyle: 'Dark Basalt Slate with Burnished Copper Linework',
-        defaultLanguage: 'Norwegian',
-        autoSave: true,
-        orchestratorWorkers: 2,
-        qualityGateStrictness: 'balanced',
-        themeAccent: 'amber'
-      }
-    };
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
+const SESSION_TOKEN_KEY = 'velora_session_token';
+const USER_CACHE_KEY = 'velora_active_user';
+
+export function getStoredSessionToken(): string | null {
+  return localStorage.getItem(SESSION_TOKEN_KEY);
+}
+
+export function getStoredUser(): UserProfile | null {
+  const raw = localStorage.getItem(USER_CACHE_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
   }
+}
 
-  // Record security audit log
-  const log = {
-    id: `log-${Date.now()}`,
-    timestamp: new Date().toISOString(),
-    event: 'USER_LOGIN',
-    details: `Vellykket innlogging for ${email}`,
-    ipAddress: '127.0.0.1 (Lokal sesjon)'
+function getAuthHeaders(): HeadersInit {
+  const token = getStoredSessionToken();
+  const user = getStoredUser();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json'
   };
-  const logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]');
-  logs.unshift(log);
-  localStorage.setItem(LOGS_KEY, JSON.stringify(logs.slice(0, 50)));
-
-  return { user };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  if (user?.id) {
+    headers['X-User-Id'] = user.id;
+  }
+  return headers;
 }
 
 export async function registerUser(data: {
@@ -207,59 +206,139 @@ export async function registerUser(data: {
   name: string;
   penName?: string;
   imprintName?: string;
-}): Promise<{ user: any }> {
-  const user = {
-    id: `usr-${Date.now()}`,
-    name: data.name,
-    email: data.email,
-    role: 'author',
-    penName: data.penName || data.name,
-    imprintName: data.imprintName || `${data.name} Press`,
-    bio: 'Creator on BookForge AI',
-    preferences: {
-      defaultContentType: 'book',
-      defaultGenre: 'Fiction',
-      defaultTargetWordCount: 30000,
-      defaultPacing: 'measured',
-      defaultVisualArtStyle: 'Nordic Noir Minimalist',
-      defaultLanguage: 'Norwegian',
-      autoSave: true,
-      orchestratorWorkers: 2,
-      qualityGateStrictness: 'balanced',
-      themeAccent: 'amber'
+}): Promise<{ user: UserProfile; token: string }> {
+  const res = await fetch('/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(body.error || 'Registration failed');
+  }
+
+  localStorage.setItem(SESSION_TOKEN_KEY, body.token);
+  localStorage.setItem(USER_CACHE_KEY, JSON.stringify(body.user));
+  return body;
+}
+
+export async function loginUser(email: string, password: string): Promise<{ user: UserProfile; token: string }> {
+  const res = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  });
+
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(body.error || 'Login failed');
+  }
+
+  localStorage.setItem(SESSION_TOKEN_KEY, body.token);
+  localStorage.setItem(USER_CACHE_KEY, JSON.stringify(body.user));
+  return body;
+}
+
+export async function fetchCurrentUser(): Promise<UserProfile | null> {
+  try {
+    const res = await fetch('/api/auth/me', {
+      headers: getAuthHeaders()
+    });
+    if (!res.ok) return null;
+    const body = await res.json();
+    if (body.user) {
+      localStorage.setItem(USER_CACHE_KEY, JSON.stringify(body.user));
+      return body.user;
     }
-  };
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
-  return { user };
+    return null;
+  } catch {
+    return getStoredUser();
+  }
 }
 
-export async function updateUserProfile(updates: Partial<any>): Promise<any> {
-  const existing = localStorage.getItem(USER_KEY);
-  const current = existing ? JSON.parse(existing) : {};
-  const updated = { ...current, ...updates, updatedAt: new Date().toISOString() };
-  localStorage.setItem(USER_KEY, JSON.stringify(updated));
-  return updated;
+export async function updateUserProfile(updates: Partial<UserProfile>): Promise<UserProfile> {
+  const res = await fetch('/api/auth/profile', {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(updates)
+  });
+
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(body.error || 'Failed to update profile');
+  }
+
+  localStorage.setItem(USER_CACHE_KEY, JSON.stringify(body.user));
+  return body.user;
 }
 
-export async function changeUserPassword(_current: string, _newPass: string): Promise<{ success: boolean }> {
-  const log = {
-    id: `log-${Date.now()}`,
-    timestamp: new Date().toISOString(),
-    event: 'PASSWORD_CHANGE',
-    details: 'Passord oppdatert lokalt',
-    ipAddress: '127.0.0.1'
-  };
-  const logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]');
-  logs.unshift(log);
-  localStorage.setItem(LOGS_KEY, JSON.stringify(logs.slice(0, 50)));
+export async function changeUserPassword(currentPassword: string, newPassword: string): Promise<{ success: boolean }> {
+  const res = await fetch('/api/auth/password', {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ currentPassword, newPassword })
+  });
+
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(body.error || 'Failed to update password');
+  }
+
   return { success: true };
 }
 
-export async function fetchSecurityLogs(): Promise<any[]> {
-  return JSON.parse(localStorage.getItem(LOGS_KEY) || '[]');
-}
-
 export async function logoutUser(): Promise<void> {
-  localStorage.removeItem(USER_KEY);
+  try {
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+  } catch {
+    // Ignore network error on logout
+  } finally {
+    localStorage.removeItem(SESSION_TOKEN_KEY);
+    localStorage.removeItem(USER_CACHE_KEY);
+  }
 }
 
+export async function fetchSecurityLogs(): Promise<SecurityAuditEvent[]> {
+  try {
+    const res = await fetch('/api/auth/security-logs', {
+      headers: getAuthHeaders()
+    });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch {
+    return [];
+  }
+}
+
+// -----------------------------------------------------------------
+// USER PROJECTS API (PERSISTENCE)
+// -----------------------------------------------------------------
+
+export async function fetchUserProjects(userId: string): Promise<Project[]> {
+  try {
+    const res = await fetch(`/api/users/${encodeURIComponent(userId)}/projects`, {
+      headers: getAuthHeaders()
+    });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch {
+    return [];
+  }
+}
+
+export async function saveUserProjects(userId: string, projects: Project[]): Promise<boolean> {
+  try {
+    const res = await fetch(`/api/users/${encodeURIComponent(userId)}/projects`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(projects)
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}

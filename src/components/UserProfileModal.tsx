@@ -303,7 +303,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     id="input-user-imprint"
                     value={imprintName}
                     onChange={(e) => setImprintName(e.target.value)}
-                    placeholder="e.g. Aetheris Editions"
+                    placeholder="e.g. Velora Editions"
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 text-xs focus:outline-none focus:border-amber-500/50"
                   />
                 </div>
@@ -504,7 +504,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     {user.stats?.totalProjects || 0}
                   </div>
                   <span className="text-[10px] text-slate-500 mt-1 block">
-                    Under {user.imprintName || 'Aetheris Imprint'}
+                    Under {user.imprintName || 'Velora Imprint'}
                   </span>
                 </div>
 
@@ -550,7 +550,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   Author Profile Certification
                 </span>
                 <p className="text-slate-400 text-xs leading-relaxed">
-                  Registered on the AETHERIS creative production platform on{' '}
+                  Registered on the VELORA creative production platform on{' '}
                   <span className="text-slate-200 font-mono">
                     {new Date(user.createdAt).toLocaleDateString()}
                   </span>

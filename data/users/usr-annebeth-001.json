@@ -1,0 +1,32 @@
+{
+  "id": "usr-annebeth-001",
+  "email": "annebeth.andersen@gmail.com",
+  "salt": "3786ff0c9db3bf88242292a37af2cf60",
+  "passwordHash": "873c3c2493c9146cbff0ff29aabc6c9fc1a3fb25931eefeb3ce708b3b457f2d476831ffad37922335c1296e43b43d994a7d716b4d1dda96cc8b20e578d86b620",
+  "name": "Annebeth Andersen",
+  "penName": "A. B. Andersen",
+  "bio": "Author & Novelist specializing in Nordic speculative drama and atmospheric mysteries on VELORA.",
+  "imprintName": "Velora Publishing House",
+  "avatarUrl": "",
+  "role": "creator",
+  "preferences": {
+    "defaultContentType": "book",
+    "defaultGenre": "Nordic Speculative Drama & Mystery",
+    "defaultTargetWordCount": 32000,
+    "defaultPacing": "measured",
+    "defaultVisualArtStyle": "Dark basalt slate with burnished copper foil linework",
+    "defaultLanguage": "Norwegian",
+    "autoSave": true,
+    "orchestratorWorkers": 2,
+    "qualityGateStrictness": "balanced",
+    "themeAccent": "amber"
+  },
+  "stats": {
+    "totalProjects": 3,
+    "completedProjects": 1,
+    "totalAuthoredWords": 48500,
+    "estimatedTokensUsed": 0
+  },
+  "createdAt": "2026-09-01T10:00:00.000Z",
+  "updatedAt": "2026-09-26T12:45:45.457Z"
+}

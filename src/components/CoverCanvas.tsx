@@ -5,12 +5,14 @@ interface CoverCanvasProps {
   config: VisualCoverConfig;
   mode?: 'front' | 'back' | 'wrap';
   className?: string;
+  thumbnail?: boolean;
 }
 
 export const CoverCanvas: React.FC<CoverCanvasProps> = ({
   config,
   mode = 'front',
-  className = ''
+  className = '',
+  thumbnail = false
 }) => {
   const {
     title = 'UNTITLED',
@@ -22,7 +24,7 @@ export const CoverCanvas: React.FC<CoverCanvasProps> = ({
     motif = 'celestial-crest',
     backCoverBlurb = '',
     spineWidthMm = 18,
-    barcodeText = ''
+    barcodeText = '978-1-VELORA-7729'
   } = config;
 
   const fontClass =
@@ -86,9 +88,59 @@ export const CoverCanvas: React.FC<CoverCanvasProps> = ({
     }
   };
 
+  // Compact Thumbnail View for Dashboard & Library Cards
+  if (thumbnail) {
+    return (
+      <div
+        className={`relative aspect-[1/1.5] rounded-lg shadow-md overflow-hidden flex flex-col justify-between p-2.5 border border-white/10 select-none ${className}`}
+        style={{ backgroundColor: bgColor }}
+      >
+        {config.coverImageUrl ? (
+          <div className="absolute inset-0 z-0">
+            <img
+              src={config.coverImageUrl}
+              alt="Cover artwork"
+              className="w-full h-full object-cover object-center"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/75 pointer-events-none" />
+          </div>
+        ) : (
+          <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:10px_10px] pointer-events-none" />
+        )}
+
+        <div className="absolute inset-1.5 rounded border pointer-events-none z-10" style={{ borderColor: `${accentColor}33` }} />
+
+        <div className="relative z-10 text-center">
+          <span className="text-[7px] uppercase tracking-[0.2em] font-semibold opacity-85 block truncate" style={{ color: accentColor }}>
+            VELORA
+          </span>
+        </div>
+
+        <div className="relative z-10 my-auto flex justify-center py-1">
+          <svg viewBox="0 0 300 300" className="w-12 h-12 drop-shadow-sm opacity-80">
+            {renderMotifSvg()}
+          </svg>
+        </div>
+
+        <div className="relative z-10 text-center space-y-0.5">
+          <h4 className="text-[10px] uppercase font-bold leading-tight line-clamp-1 drop-shadow" style={{ color: '#ffffff' }}>
+            {title}
+          </h4>
+          <span className="text-[8px] uppercase tracking-wider block truncate text-slate-300 drop-shadow" style={{ color: `${accentColor}cc` }}>
+            {author}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Full Front Cover View
   if (mode === 'front') {
     return (
-      <div className={`relative aspect-[1/1.55] rounded-lg shadow-2xl overflow-hidden flex flex-col justify-between p-8 border border-white/10 select-none ${className}`} style={{ backgroundColor: bgColor }}>
+      <div
+        className={`relative aspect-[1/1.55] rounded-xl shadow-2xl overflow-hidden flex flex-col justify-between p-8 border border-white/10 select-none ${className}`}
+        style={{ backgroundColor: bgColor }}
+      >
         {/* Render background illustration if provided */}
         {config.coverImageUrl ? (
           <div className="absolute inset-0 z-0">
@@ -109,10 +161,10 @@ export const CoverCanvas: React.FC<CoverCanvasProps> = ({
         <div className="absolute inset-5 rounded border pointer-events-none z-10" style={{ borderColor: `${accentColor}22` }} />
         <div className="relative z-10 text-center pt-2">
           <span className="text-[10px] uppercase tracking-[0.3em] font-semibold opacity-85" style={{ color: accentColor }}>
-            A BOOKFORGE AI ORIGINAL WORK
+            A VELORA ORIGINAL WORK
           </span>
         </div>
-        
+
         {/* Center element: if no cover image, display full motif; if cover image present, display subtle celestial badge or crest */}
         <div className="relative z-10 my-auto flex justify-center py-3">
           <svg viewBox="0 0 300 300" className={`drop-shadow-md transition-all ${config.coverImageUrl ? 'w-24 h-24 opacity-75' : 'w-48 h-48'}`}>
@@ -141,10 +193,13 @@ export const CoverCanvas: React.FC<CoverCanvasProps> = ({
     );
   }
 
+  // Full Back Cover View
   if (mode === 'back') {
     return (
-      <div className={`relative aspect-[1/1.55] rounded-lg shadow-2xl overflow-hidden flex flex-col justify-between p-8 border border-white/10 select-none ${className}`} style={{ backgroundColor: bgColor }}>
-        {/* Render background illustration for back cover if provided */}
+      <div
+        className={`relative aspect-[1/1.55] rounded-xl shadow-2xl overflow-hidden flex flex-col justify-between p-8 border border-white/10 select-none ${className}`}
+        style={{ backgroundColor: bgColor }}
+      >
         {config.backCoverImageUrl ? (
           <div className="absolute inset-0 z-0">
             <img
@@ -157,23 +212,44 @@ export const CoverCanvas: React.FC<CoverCanvasProps> = ({
         ) : null}
 
         <div className="absolute inset-4 rounded border pointer-events-none z-10" style={{ borderColor: `${accentColor}25` }} />
-        <div className="relative z-10 text-center pt-2"><p className="text-xs tracking-widest uppercase font-semibold" style={{ color: accentColor }}>ABOUT THE BOOK</p></div>
+        <div className="relative z-10 text-center pt-2">
+          <p className="text-xs tracking-widest uppercase font-semibold" style={{ color: accentColor }}>
+            ABOUT THE BOOK
+          </p>
+        </div>
         <div className="relative z-10 my-auto px-2 space-y-4 text-center">
           <div className="w-8 h-px mx-auto" style={{ backgroundColor: accentColor }} />
-          <p className="text-xs sm:text-sm leading-relaxed text-slate-200 font-serif italic line-clamp-8 drop-shadow">{backCoverBlurb || 'Add a back-cover description for this project.'}</p>
+          <p className="text-xs sm:text-sm leading-relaxed text-slate-200 font-serif italic line-clamp-8 drop-shadow">
+            {backCoverBlurb || 'Add a back-cover description for this project.'}
+          </p>
           <div className="w-8 h-px mx-auto" style={{ backgroundColor: accentColor }} />
         </div>
         <div className="relative z-10 flex items-end justify-between pt-4 border-t border-white/10">
-          <div className="text-left"><span className="block text-[9px] uppercase tracking-wider text-slate-400">PUBLISHED VIA BOOKFORGE AI</span><span className="text-[9px] font-mono text-slate-300">BOOK</span></div>
-          {barcodeText && <div className="bg-white p-1 rounded shadow text-slate-950 text-center"><div className="flex gap-[2px] h-6 items-center px-1">{[3, 1, 2, 4, 1, 3, 2, 1, 4, 2, 3, 1, 2, 3].map((w, i) => <div key={i} className="bg-black h-full" style={{ width: `${w}px` }} />)}</div><span className="block text-[7px] font-mono tracking-tighter">{barcodeText}</span></div>}
+          <div className="text-left">
+            <span className="block text-[9px] uppercase tracking-wider text-slate-400">PUBLISHED VIA VELORA</span>
+            <span className="text-[9px] font-mono text-slate-300">BOOK EDITION</span>
+          </div>
+          {barcodeText && (
+            <div className="bg-white p-1 rounded shadow text-slate-950 text-center">
+              <div className="flex gap-[2px] h-6 items-center px-1">
+                {[3, 1, 2, 4, 1, 3, 2, 1, 4, 2, 3, 1, 2, 3].map((w, i) => (
+                  <div key={i} className="bg-black h-full" style={{ width: `${w}px` }} />
+                ))}
+              </div>
+              <span className="block text-[7px] font-mono tracking-tighter">{barcodeText}</span>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
+  // Wrap-around Cover View
   return (
-    <div className={`relative w-full aspect-[2.1/1] rounded-xl shadow-2xl overflow-hidden flex border border-white/15 select-none ${className}`} style={{ backgroundColor: bgColor }}>
-      {/* Front and back cover backgrounds */}
+    <div
+      className={`relative w-full aspect-[2.1/1] rounded-xl shadow-2xl overflow-hidden flex border border-white/15 select-none ${className}`}
+      style={{ backgroundColor: bgColor }}
+    >
       {config.coverImageUrl && (
         <div className="absolute right-0 top-0 bottom-0 w-[45%] z-0">
           <img src={config.coverImageUrl} alt="Front artwork" className="w-full h-full object-cover" />
@@ -187,9 +263,41 @@ export const CoverCanvas: React.FC<CoverCanvasProps> = ({
         </div>
       )}
 
-      <div className="w-[45%] h-full p-6 flex flex-col justify-between border-r border-white/5 relative z-10"><span className="text-[9px] uppercase tracking-[0.25em] font-semibold" style={{ color: accentColor }}>SYNOPSIS</span><p className="text-[11px] leading-relaxed text-slate-300 font-serif italic line-clamp-6">{backCoverBlurb}</p><div className="text-[8px] font-mono text-slate-400">{barcodeText}</div></div>
-      <div className="w-[10%] h-full flex flex-col items-center justify-between py-6 border-x border-white/10 relative z-10" style={{ backgroundColor: `${bgColor}f2` }}><span className="text-[8px] tracking-widest text-slate-400 uppercase rotate-90 my-2">BOOKFORGE AI</span><div className="flex-1 flex items-center justify-center"><span className="text-[10px] font-bold tracking-wider text-slate-100 uppercase -rotate-90 whitespace-nowrap" style={{ color: accentColor }}>{title} &bull; {author}</span></div><span className="text-[7px] font-mono text-slate-400 rotate-90 my-2">{spineWidthMm}mm</span></div>
-      <div className="w-[45%] h-full p-6 flex flex-col justify-between relative z-10"><div className="text-right"><span className="text-[8px] uppercase tracking-[0.2em]" style={{ color: accentColor }}>ORIGINAL WORK</span></div><div className="my-auto text-center"><h2 className={`text-lg uppercase font-bold tracking-wider leading-tight ${fontClass}`} style={{ color: '#ffffff' }}>{title}</h2><p className="text-[10px] italic text-slate-300 mt-1">{subtitle}</p></div><div className="text-center"><span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-slate-200">{author}</span></div></div>
+      <div className="w-[45%] h-full p-6 flex flex-col justify-between border-r border-white/5 relative z-10">
+        <span className="text-[9px] uppercase tracking-[0.25em] font-semibold" style={{ color: accentColor }}>
+          SYNOPSIS
+        </span>
+        <p className="text-[11px] leading-relaxed text-slate-300 font-serif italic line-clamp-6">{backCoverBlurb}</p>
+        <div className="text-[8px] font-mono text-slate-400">{barcodeText}</div>
+      </div>
+      <div
+        className="w-[10%] h-full flex flex-col items-center justify-between py-6 border-x border-white/10 relative z-10"
+        style={{ backgroundColor: `${bgColor}f2` }}
+      >
+        <span className="text-[8px] tracking-widest text-slate-400 uppercase rotate-90 my-2">VELORA</span>
+        <div className="flex-1 flex items-center justify-center">
+          <span className="text-[10px] font-bold tracking-wider text-slate-100 uppercase -rotate-90 whitespace-nowrap" style={{ color: accentColor }}>
+            {title} &bull; {author}
+          </span>
+        </div>
+        <span className="text-[7px] font-mono text-slate-400 rotate-90 my-2">{spineWidthMm}mm</span>
+      </div>
+      <div className="w-[45%] h-full p-6 flex flex-col justify-between relative z-10">
+        <div className="text-right">
+          <span className="text-[8px] uppercase tracking-[0.2em]" style={{ color: accentColor }}>
+            ORIGINAL WORK
+          </span>
+        </div>
+        <div className="my-auto text-center">
+          <h2 className={`text-lg uppercase font-bold tracking-wider leading-tight ${fontClass}`} style={{ color: '#ffffff' }}>
+            {title}
+          </h2>
+          <p className="text-[10px] italic text-slate-300 mt-1">{subtitle}</p>
+        </div>
+        <div className="text-center">
+          <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-slate-200">{author}</span>
+        </div>
+      </div>
     </div>
   );
 };

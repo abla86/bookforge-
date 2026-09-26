@@ -24,15 +24,15 @@ export const ControlModule: React.FC<ControlModuleProps> = ({
   onUpdateConfig,
   activeProject
 }) => {
-  const currentBrand = config.brandName || 'AETHERIS';
+  const currentBrand = config.brandName || 'VELORA';
   const [customBrandInput, setCustomBrandInput] = useState<string>(currentBrand);
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
 
   // Suggested Platform Naming Candidates
   const nameCandidates = [
     {
-      name: 'AETHERIS',
-      tagline: 'Creative Intelligence & Production Architecture',
+      name: 'VELORA',
+      tagline: 'Creative Intelligence & Publishing Architecture',
       rationale: 'Elevated aesthetic, literary, clean Scandinavian cadence. Official platform standard.'
     },
     {
@@ -195,18 +195,18 @@ export const ControlModule: React.FC<ControlModuleProps> = ({
           <div className="space-y-4 text-xs">
             <div>
               <label className="text-slate-300 font-medium block mb-1">
-                Primary Creative Intelligence Model
+                Primary Creative Intelligence Engine
               </label>
               <select
                 value={config.modelId}
                 onChange={(e) => onUpdateConfig({ modelId: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500/50"
               >
-                <option value="gemini-3.8-flash">
-                  Gemini 3.8 Flash (High-Speed &bull; Optimized for &le;10-min Production)
+                <option value="velora-narrative-v2">
+                  VELORA Deep Narrative Engine (High-Speed &bull; 100% Gratis &bull; Ubegrenset)
                 </option>
-                <option value="gemini-3.1-pro-preview">
-                  Gemini 3.1 Pro (Deep Complex Reasoning &bull; Dense World-building)
+                <option value="velora-literary-synth">
+                  VELORA Literary Synthesizer (Atmospheric World-building &bull; 0 kr)
                 </option>
               </select>
             </div>
@@ -266,9 +266,9 @@ export const ControlModule: React.FC<ControlModuleProps> = ({
             </div>
 
             <div className="p-3 bg-slate-950 rounded-lg border border-slate-800 flex items-center justify-between">
-              <span className="text-slate-400">Projected Gemini API Cost</span>
+              <span className="text-slate-400">Driftkostnad &amp; API-gebyr</span>
               <span className="font-mono text-emerald-400 font-bold">
-                ${estimatedCost} USD
+                0 kr (100% Gratis)
               </span>
             </div>
 

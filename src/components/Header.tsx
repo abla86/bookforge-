@@ -21,7 +21,6 @@ interface HeaderProps {
   onSelectModule: (module: PlatformConfig['activeModule']) => void;
   onOpenProfile: () => void;
   onOpenAuth: () => void;
-  hasGeminiKey: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -30,10 +29,9 @@ export const Header: React.FC<HeaderProps> = ({
   currentUser,
   onSelectModule,
   onOpenProfile,
-  onOpenAuth,
-  hasGeminiKey
+  onOpenAuth
 }) => {
-  const brand = config.brandName || 'AETHERIS';
+  const brand = config.brandName || 'VELORA';
 
   const modules: { id: PlatformConfig['activeModule']; label: string; sub: string; icon: any }[] = [
     { id: 'dashboard', label: `${brand} Dashboard`, sub: 'Oversikt & Prosjekter', icon: LayoutDashboard },

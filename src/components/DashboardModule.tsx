@@ -24,30 +24,37 @@ import {
   X,
   FileText
 } from 'lucide-react';
-import { Project, PlatformConfig, ContentType } from '../types';
+import { Project, PlatformConfig, ContentType, UserProfile } from '../types';
+import { CoverCanvas } from './CoverCanvas';
 
 interface DashboardModuleProps {
   config: PlatformConfig;
   projects: Project[];
   activeProject: Project;
+  currentUser?: UserProfile | null;
   onSelectProject: (project: Project) => void;
   onCreateNewProject: () => void;
   onDuplicateProject: (project: Project) => void;
   onDeleteProject: (projectId: string) => void;
   onNavigateToModule: (module: PlatformConfig['activeModule']) => void;
+  onOpenProfile?: () => void;
+  onOpenAuth?: () => void;
 }
 
 export const DashboardModule: React.FC<DashboardModuleProps> = ({
   config,
   projects,
   activeProject,
+  currentUser,
   onSelectProject,
   onCreateNewProject,
   onDuplicateProject,
   onDeleteProject,
-  onNavigateToModule
+  onNavigateToModule,
+  onOpenProfile,
+  onOpenAuth
 }) => {
-  const brand = config.brandName || 'AETHERIS';
+  const brand = config.brandName || 'VELORA';
 
   // Filtering & Sorting State
   const [searchQuery, setSearchQuery] = useState('');
@@ -176,23 +183,52 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               <LayoutDashboard className="w-4 h-4" />
             </div>
             <h1 className="text-xl font-serif font-bold text-slate-100 tracking-wide">
-              {brand} Creative Dashboard &amp; Portfolio
+              {currentUser ? `${currentUser.penName || currentUser.name}'s Creative Workspace` : `${brand} Creative Dashboard & Portfolio`}
             </h1>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Track, orchestrate, and manage ongoing and completed creative productions from initial spark to publishable editions.
+            {currentUser ? (
+              <span>
+                Personal Workspace &bull; <span className="text-amber-300 font-mono">{currentUser.email}</span> &bull; {currentUser.imprintName || `${currentUser.name} Publishing`}
+              </span>
+            ) : (
+              'Track, orchestrate, and manage ongoing and completed creative productions from initial spark to publishable editions.'
+            )}
           </p>
         </div>
 
-        <button
-          type="button"
-          id="btn-dashboard-create-new"
-          onClick={onCreateNewProject}
-          className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Creative Project</span>
-        </button>
+        <div className="flex items-center gap-3">
+          {currentUser ? (
+            <button
+              type="button"
+              id="btn-dashboard-profile"
+              onClick={onOpenProfile}
+              className="px-3 py-2 rounded-xl text-xs font-medium bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 hover:border-amber-500/30 transition-all flex items-center gap-2"
+            >
+              <Users className="w-3.5 h-3.5 text-amber-400" />
+              <span>Creator Profile</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              id="btn-dashboard-signin"
+              onClick={onOpenAuth}
+              className="px-3 py-2 rounded-xl text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-colors shadow"
+            >
+              Sign In to VELORA
+            </button>
+          )}
+
+          <button
+            type="button"
+            id="btn-dashboard-create-new"
+            onClick={onCreateNewProject}
+            className="px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Creative Project</span>
+          </button>
+        </div>
       </div>
 
       {/* 2. Key Metrics Bar */}
@@ -461,30 +497,56 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                     </div>
                   </div>
 
-                  <div>
-                    <h3 className="text-base font-serif font-bold text-slate-100 line-clamp-1 hover:text-amber-300 transition-colors cursor-pointer"
+                  {/* Card Content with Book Cover Preview */}
+                  <div className="flex gap-4 items-start">
+                    <div
+                      className="w-20 shrink-0 cursor-pointer hover:opacity-90 transition-transform hover:scale-105"
                       onClick={() => setInspectedProject(project)}
+                      title="Inspect book and cover"
                     >
-                      {project.title}
-                    </h3>
-                    {project.subtitle && (
-                      <p className="text-xs text-slate-400 italic line-clamp-1 mt-0.5">
-                        {project.subtitle}
+                      <CoverCanvas
+                        config={project.coverConfig || {
+                          title: project.title,
+                          subtitle: project.subtitle || '',
+                          author: project.author || 'Author',
+                          accentColor: '#d4af37',
+                          bgColor: '#090e17',
+                          fontFamily: 'cinzel',
+                          motif: 'celestial-crest',
+                          backCoverBlurb: project.intent?.logline || '',
+                          spineWidthMm: 18
+                        }}
+                        thumbnail
+                      />
+                    </div>
+
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <div>
+                        <h3 className="text-sm font-serif font-bold text-slate-100 line-clamp-1 hover:text-amber-300 transition-colors cursor-pointer"
+                          onClick={() => setInspectedProject(project)}
+                        >
+                          {project.title}
+                        </h3>
+                        {project.subtitle && (
+                          <p className="text-[11px] text-slate-400 italic line-clamp-1 mt-0.5">
+                            {project.subtitle}
+                          </p>
+                        )}
+                        <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                          By {project.author || 'Anonymous'}
+                        </p>
+                      </div>
+
+                      {/* Logline */}
+                      <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
+                        {project.intent?.logline || project.rawIdea}
                       </p>
-                    )}
-                    <p className="text-[11px] text-slate-400 font-mono mt-1">
-                      By {project.author || 'Anonymous'}
-                    </p>
-                  </div>
 
-                  {/* Logline */}
-                  <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
-                    {project.intent?.logline || project.rawIdea}
-                  </p>
-
-                  {/* Genre badge */}
-                  <div className="text-[10px] text-slate-400 font-mono bg-slate-950/60 px-2 py-1 rounded border border-slate-800/80 truncate">
-                    Genre: <span className="text-slate-200">{project.intent?.genre || 'Speculative'}</span>
+                      {/* Genre badge */}
+                      <div className="text-[10px] text-slate-400 font-mono bg-slate-950/60 px-2 py-0.5 rounded border border-slate-800/80 truncate">
+                        Genre: <span className="text-slate-200">{project.intent?.genre || 'Speculative'}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -643,43 +705,64 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
 
             {/* Modal Body */}
             <div className="p-6 overflow-y-auto space-y-6 text-xs text-slate-300 divide-y divide-slate-800/80">
-              {/* Strategic Intent */}
-              <div className="space-y-3">
-                <h4 className="font-semibold text-slate-100 uppercase tracking-wider text-[11px] font-mono text-amber-400">
-                  Strategic Creative Intent
-                </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
-                  <div>
-                    <span className="text-slate-500 text-[10px] font-mono block">Genre / Subgenre</span>
-                    <span className="text-slate-200 font-medium">{inspectedProject.intent?.genre || 'N/A'}</span>
+              {/* Cover Preview & Strategic Intent */}
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-6 items-start">
+                  <div className="w-48 sm:w-56 shrink-0 mx-auto sm:mx-0 shadow-2xl rounded-xl overflow-hidden border border-slate-700/80">
+                    <CoverCanvas
+                      config={inspectedProject.coverConfig || {
+                        title: inspectedProject.title,
+                        subtitle: inspectedProject.subtitle || '',
+                        author: inspectedProject.author || 'Author',
+                        accentColor: '#d4af37',
+                        bgColor: '#090e17',
+                        fontFamily: 'cinzel',
+                        motif: 'celestial-crest',
+                        backCoverBlurb: inspectedProject.intent?.logline || '',
+                        spineWidthMm: 18
+                      }}
+                      mode="front"
+                    />
                   </div>
-                  <div>
-                    <span className="text-slate-500 text-[10px] font-mono block">Target Audience</span>
-                    <span className="text-slate-200 font-medium">{inspectedProject.intent?.targetAudience || 'General'}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 text-[10px] font-mono block">Tone &amp; Atmosphere</span>
-                    <span className="text-slate-200 font-medium">{inspectedProject.intent?.tone || 'Balanced'}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 text-[10px] font-mono block">Target Word Count</span>
-                    <span className="text-slate-200 font-mono">{inspectedProject.intent?.targetWordCount?.toLocaleString() || 30000}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 text-[10px] font-mono block">Pacing</span>
-                    <span className="text-slate-200 font-mono capitalize">{inspectedProject.intent?.pacing || 'measured'}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 text-[10px] font-mono block">Language</span>
-                    <span className="text-slate-200 font-medium">{inspectedProject.intent?.language || 'English'}</span>
-                  </div>
-                </div>
 
-                <div>
-                  <span className="text-slate-400 text-[11px] font-medium block mb-1">High-Concept Logline:</span>
-                  <p className="bg-slate-950/40 p-3 rounded-lg border border-slate-800/80 italic text-slate-200">
-                    "{inspectedProject.intent?.logline || inspectedProject.rawIdea}"
-                  </p>
+                  <div className="flex-1 min-w-0 space-y-3 w-full">
+                    <h4 className="font-semibold text-slate-100 uppercase tracking-wider text-[11px] font-mono text-amber-400">
+                      Strategic Creative Intent
+                    </h4>
+                    <div className="grid grid-cols-2 gap-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                      <div>
+                        <span className="text-slate-500 text-[10px] font-mono block">Genre / Subgenre</span>
+                        <span className="text-slate-200 font-medium">{inspectedProject.intent?.genre || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 text-[10px] font-mono block">Target Audience</span>
+                        <span className="text-slate-200 font-medium">{inspectedProject.intent?.targetAudience || 'General'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 text-[10px] font-mono block">Tone &amp; Atmosphere</span>
+                        <span className="text-slate-200 font-medium">{inspectedProject.intent?.tone || 'Balanced'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 text-[10px] font-mono block">Target Word Count</span>
+                        <span className="text-slate-200 font-mono">{inspectedProject.intent?.targetWordCount?.toLocaleString() || 30000}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 text-[10px] font-mono block">Pacing</span>
+                        <span className="text-slate-200 font-mono capitalize">{inspectedProject.intent?.pacing || 'measured'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 text-[10px] font-mono block">Language</span>
+                        <span className="text-slate-200 font-medium">{inspectedProject.intent?.language || 'English'}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-slate-400 text-[11px] font-medium block mb-1">High-Concept Logline:</span>
+                      <p className="bg-slate-950/40 p-3 rounded-lg border border-slate-800/80 italic text-slate-200">
+                        "{inspectedProject.intent?.logline || inspectedProject.rawIdea}"
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 

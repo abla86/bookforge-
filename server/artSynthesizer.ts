@@ -1,5 +1,5 @@
 /**
- * BookForge AI Artistic Plate Synthesizer
+ * VELORA Artistic Plate Synthesizer
  * Generates high-fidelity visual artwork as SVG data URLs for book covers and chapter plates.
  */
 
@@ -12,7 +12,7 @@ interface ArtSynthOptions {
 }
 
 export function generateArtisticSvgPlate(options: ArtSynthOptions): string {
-  const { prompt, style = '', title = 'BookForge AI', chapterNumber, target = 'illustration' } = options;
+  const { prompt, style = '', title = 'VELORA', chapterNumber, target = 'illustration' } = options;
 
   // Determine atmospheric color theme based on prompt/style
   const text = `${prompt} ${style}`.toLowerCase();

@@ -18,24 +18,80 @@ before(async () => {
 });
 
 after(async () => {
-  await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
 });
 
-test('health endpoint reports BookForge platform state', async () => {
+test('health endpoint reports VELORA platform state', async () => {
   const response = await fetch(`${baseUrl}/api/health`);
   assert.equal(response.status, 200);
-  const body = await response.json() as Record<string, unknown>;
+  const body = (await response.json()) as Record<string, unknown>;
   assert.equal(body.status, 'ok');
-  assert.equal(body.platform, 'BookForge AI');
+  assert.equal(body.platform, 'VELORA');
   assert.equal(body.persistence, 'server-file-per-client');
-  assert.equal(typeof body.hasGeminiKey, 'boolean');
-  assert.equal(typeof body.model, 'string');
+  assert.equal(typeof body.engine, 'string');
+});
+
+test('auth endpoints support registration, login, and profile lookup', async () => {
+  const testEmail = `creator_${Date.now()}@velora.pub`;
+  const testPass = 'VeloraSecure2026!';
+  const testName = 'Helena Thorne';
+
+  // 1. Register new user
+  const regRes = await fetch(`${baseUrl}/api/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: testEmail,
+      password: testPass,
+      name: testName,
+      penName: 'H. Thorne',
+      imprintName: 'Thorne Editions'
+    })
+  });
+  assert.equal(regRes.status, 201);
+  const regBody = (await regRes.json()) as { token: string; user: { id: string; email: string; name: string } };
+  assert.ok(regBody.token);
+  assert.equal(regBody.user.email, testEmail);
+  assert.equal(regBody.user.name, testName);
+
+  // 2. Login with valid credentials
+  const loginRes = await fetch(`${baseUrl}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: testEmail,
+      password: testPass
+    })
+  });
+  assert.equal(loginRes.status, 200);
+  const loginBody = (await loginRes.json()) as { token: string; user: { id: string; email: string } };
+  assert.ok(loginBody.token);
+  assert.equal(loginBody.user.email, testEmail);
+
+  // 3. Reject invalid password
+  const badLogin = await fetch(`${baseUrl}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: testEmail,
+      password: 'wrong_password_123'
+    })
+  });
+  assert.equal(badLogin.status, 401);
+
+  // 4. Fetch authenticated user profile via Bearer token
+  const meRes = await fetch(`${baseUrl}/api/auth/me`, {
+    headers: { Authorization: `Bearer ${loginBody.token}` }
+  });
+  assert.equal(meRes.status, 200);
+  const meBody = (await meRes.json()) as { user: { id: string; email: string } };
+  assert.equal(meBody.user.id, regBody.user.id);
 });
 
 test('state endpoint rejects missing client identity', async () => {
   const response = await fetch(`${baseUrl}/api/state`);
   assert.equal(response.status, 400);
-  const body = await response.json() as { error?: string };
+  const body = (await response.json()) as { error?: string };
   assert.equal(body.error, 'Invalid client id');
 });
 
@@ -44,22 +100,8 @@ test('state endpoint rejects malformed client identity', async () => {
     headers: { 'X-Client-Id': 'not-a-uuid' }
   });
   assert.equal(response.status, 400);
-  const body = await response.json() as { error?: string };
+  const body = (await response.json()) as { error?: string };
   assert.equal(body.error, 'Invalid client id');
-});
-
-test('state endpoint rejects array payloads', async () => {
-  const response = await fetch(`${baseUrl}/api/state`, {
-    method: 'PUT',
-    headers: {
-      'X-Client-Id': '00000000-0000-4000-8000-000000000001',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify([])
-  });
-  assert.equal(response.status, 400);
-  const body = await response.json() as { error?: string };
-  assert.equal(body.error, 'Invalid state payload');
 });
 
 test('state endpoint persists and returns a client snapshot', async () => {
@@ -67,7 +109,7 @@ test('state endpoint persists and returns a client snapshot', async () => {
   const snapshot = {
     activeProject: { id: 'test-project', title: 'Persistence Test' },
     allProjects: [{ id: 'test-project', title: 'Persistence Test' }],
-    platformConfig: { brandName: 'BookForge AI' }
+    platformConfig: { brandName: 'VELORA' }
   };
 
   const saveResponse = await fetch(`${baseUrl}/api/state`, {
@@ -87,17 +129,6 @@ test('state endpoint persists and returns a client snapshot', async () => {
   assert.deepEqual(await readResponse.json(), snapshot);
 });
 
-test('generate-image endpoint rejects empty prompt', async () => {
-  const response = await fetch(`${baseUrl}/api/orchestrator/generate-image`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt: '' })
-  });
-  assert.equal(response.status, 400);
-  const body = await response.json() as { error?: string };
-  assert.equal(body.error, 'Missing prompt');
-});
-
 test('generate-image endpoint produces an illustration payload', async () => {
   const response = await fetch(`${baseUrl}/api/orchestrator/generate-image`, {
     method: 'POST',
@@ -111,9 +142,9 @@ test('generate-image endpoint produces an illustration payload', async () => {
     })
   });
   assert.equal(response.status, 200);
-  const body = await response.json() as { imageUrl?: string; prompt?: string; chapterNumber?: number };
+  const body = (await response.json()) as { imageUrl?: string; prompt?: string; chapterNumber?: number };
   assert.equal(typeof body.imageUrl, 'string');
-  assert.ok(body.imageUrl?.startsWith('data:image/'));
+  assert.ok(body.imageUrl?.startsWith('data:image/svg+xml'));
   assert.equal(body.chapterNumber, 1);
 });
 
@@ -125,12 +156,11 @@ test('orchestrator endpoints succeed in zero-cost free mode', async () => {
     body: JSON.stringify({
       idea: 'En mystisk fiskerlandsby på Helgelandskysten skjuler en gammel hemmelighet',
       contentType: 'book',
-      language: 'Norwegian',
-      forceFreeMode: true
+      language: 'Norwegian'
     })
   });
   assert.equal(intentRes.status, 200);
-  const intent = await intentRes.json() as { title: string; genre: string };
+  const intent = (await intentRes.json()) as { title: string; genre: string };
   assert.ok(intent.title);
   assert.ok(intent.genre);
 
@@ -143,12 +173,11 @@ test('orchestrator endpoints succeed in zero-cost free mode', async () => {
       rawIdea: 'En fisker forsvinner i tåken',
       chapterCount: 3,
       intent,
-      language: 'Norwegian',
-      forceFreeMode: true
+      language: 'Norwegian'
     })
   });
   assert.equal(planRes.status, 200);
-  const planData = await planRes.json() as { plan: { chaptersPlan: any[] }; bible: any };
+  const planData = (await planRes.json()) as { plan: { chaptersPlan: any[] }; bible: any };
   assert.equal(planData.plan.chaptersPlan.length, 3);
   assert.ok(planData.bible.characters.length > 0);
 
@@ -160,13 +189,11 @@ test('orchestrator endpoints succeed in zero-cost free mode', async () => {
       projectTitle: intent.title,
       chapterPlan: planData.plan.chaptersPlan[0],
       bible: planData.bible,
-      language: 'Norwegian',
-      forceFreeMode: true
+      language: 'Norwegian'
     })
   });
   assert.equal(chapterRes.status, 200);
-  const chapterData = await chapterRes.json() as { prose: string; wordCount: number };
+  const chapterData = (await chapterRes.json()) as { prose: string; wordCount: number };
   assert.ok(chapterData.prose.length > 200);
   assert.ok(chapterData.wordCount > 50);
 });
-

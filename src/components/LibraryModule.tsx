@@ -13,6 +13,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { Project, PlatformConfig } from '../types';
+import { CoverCanvas } from './CoverCanvas';
 
 interface LibraryModuleProps {
   config: PlatformConfig;
@@ -33,7 +34,7 @@ export const LibraryModule: React.FC<LibraryModuleProps> = ({
   onDuplicateProject,
   onDeleteProject
 }) => {
-  const brand = config.brandName || 'AETHERIS';
+  const brand = config.brandName || 'VELORA';
 
   const totalWordsAcrossAll = allProjects.reduce(
     (acc, p) => acc + p.chapters.reduce((sum, c) => sum + (c.wordCount || 0), 0),
@@ -126,7 +127,7 @@ export const LibraryModule: React.FC<LibraryModuleProps> = ({
                     : 'border-slate-800 hover:border-slate-700'
                 }`}
               >
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-slate-800 text-amber-300 border border-amber-500/20">
                       {proj.contentType}
@@ -138,17 +139,38 @@ export const LibraryModule: React.FC<LibraryModuleProps> = ({
                     )}
                   </div>
 
-                  <h4 className="text-base font-serif font-bold text-slate-100">
-                    {proj.title}
-                  </h4>
-                  {proj.subtitle && (
-                    <p className="text-xs text-slate-400 italic">
-                      {proj.subtitle}
-                    </p>
-                  )}
-                  <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
-                    {proj.intent.logline}
-                  </p>
+                  <div className="flex gap-3.5 items-start">
+                    <div className="w-16 shrink-0 shadow-sm rounded overflow-hidden">
+                      <CoverCanvas
+                        config={proj.coverConfig || {
+                          title: proj.title,
+                          subtitle: proj.subtitle || '',
+                          author: proj.author || 'Author',
+                          accentColor: '#d4af37',
+                          bgColor: '#090e17',
+                          fontFamily: 'cinzel',
+                          motif: 'celestial-crest',
+                          backCoverBlurb: proj.intent?.logline || '',
+                          spineWidthMm: 18
+                        }}
+                        thumbnail
+                      />
+                    </div>
+
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <h4 className="text-sm font-serif font-bold text-slate-100 line-clamp-1">
+                        {proj.title}
+                      </h4>
+                      {proj.subtitle && (
+                        <p className="text-[11px] text-slate-400 italic line-clamp-1">
+                          {proj.subtitle}
+                        </p>
+                      )}
+                      <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
+                        {proj.intent.logline}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-3 pt-3 border-t border-slate-800/80">

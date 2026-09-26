@@ -69,12 +69,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const handleQuickDemoLogin = async () => {
     setEmail('annebeth.andersen@gmail.com');
-    setPassword('Aetheris2026!');
+    setPassword('Velora2026!');
     setLoading(true);
     setError(null);
 
     try {
-      const { user } = await loginUser('annebeth.andersen@gmail.com', 'Aetheris2026!');
+      const { user } = await loginUser('annebeth.andersen@gmail.com', 'Velora2026!');
       onAuthSuccess(user);
       onClose();
     } catch (err: any) {
@@ -91,14 +91,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 font-serif font-black text-lg shadow-md">
-              A
+              V
             </div>
             <div>
               <h2 className="text-base font-serif font-bold text-slate-100">
-                {mode === 'login' ? 'Creator Sign In' : 'Register Creator Account'}
+                {mode === 'login' ? 'VELORA Creator Sign In' : 'Register VELORA Creator Account'}
               </h2>
               <p className="text-xs text-slate-400">
-                AETHERIS Creative Production Architecture
+                VELORA Creative Publishing Architecture
               </p>
             </div>
           </div>
@@ -197,7 +197,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <input
                     type="text"
                     id="input-auth-imprint"
-                    placeholder="e.g. Aetheris Editions"
+                    placeholder="e.g. Velora Editions"
                     value={imprintName}
                     onChange={(e) => setImprintName(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500/50"
@@ -217,7 +217,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 type="email"
                 id="input-auth-email"
                 required
-                placeholder="creator@aetheris.pub"
+                placeholder="creator@velora.pub"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500/50"

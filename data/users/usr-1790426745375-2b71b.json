@@ -1,0 +1,32 @@
+{
+  "id": "usr-1790426745375-2b71b",
+  "email": "creator_1790426745258@velora.pub",
+  "salt": "86e1d33b1c3e7116b4102c9cc25a2e71",
+  "passwordHash": "a43f501ede2fec6a66191b3aee9f7a92395c11d6f73bf88b864775b37975f6d8cf6023fdb2242228d9b78f0fb6ceee04780035df2549116a1cb56c397fd6d558",
+  "name": "Helena Thorne",
+  "penName": "H. Thorne",
+  "bio": "Creator on VELORA Publishing Platform",
+  "imprintName": "Thorne Editions",
+  "avatarUrl": "",
+  "role": "creator",
+  "preferences": {
+    "defaultContentType": "book",
+    "defaultGenre": "Fiction",
+    "defaultTargetWordCount": 30000,
+    "defaultPacing": "measured",
+    "defaultVisualArtStyle": "Dark basalt slate with burnished copper foil linework",
+    "defaultLanguage": "Norwegian",
+    "autoSave": true,
+    "orchestratorWorkers": 2,
+    "qualityGateStrictness": "balanced",
+    "themeAccent": "amber"
+  },
+  "stats": {
+    "totalProjects": 0,
+    "completedProjects": 0,
+    "totalAuthoredWords": 0,
+    "estimatedTokensUsed": 0
+  },
+  "createdAt": "2026-09-26T12:45:45.375Z",
+  "updatedAt": "2026-09-26T12:45:45.375Z"
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "audit-1790426769994-3tgf",
+    "timestamp": "2026-09-26T12:46:09.994Z",
+    "userId": "usr-annebeth-001",
+    "action": "USER_LOGIN_SUCCESS",
+    "status": "success",
+    "ipAddress": "127.0.0.1",
+    "details": "Successful sign in for annebeth.andersen@gmail.com"
+  },
+  {
+    "id": "audit-1790426745599-uj0m",
+    "timestamp": "2026-09-26T12:45:45.599Z",
+    "userId": "usr-1790426745375-2b71b",
+    "action": "USER_LOGIN_INVALID_PASSWORD",
+    "status": "failure",
+    "ipAddress": "127.0.0.1",
+    "details": "Invalid password attempt for creator_1790426745258@velora.pub"
+  },
+  {
+    "id": "audit-1790426745535-c8vj",
+    "timestamp": "2026-09-26T12:45:45.535Z",
+    "userId": "usr-1790426745375-2b71b",
+    "action": "USER_LOGIN_SUCCESS",
+    "status": "success",
+    "ipAddress": "127.0.0.1",
+    "details": "Successful sign in for creator_1790426745258@velora.pub"
+  },
+  {
+    "id": "audit-1790426745461-9b6f",
+    "timestamp": "2026-09-26T12:45:45.461Z",
+    "userId": "usr-1790426745375-2b71b",
+    "action": "USER_REGISTER_SUCCESS",
+    "status": "success",
+    "ipAddress": "127.0.0.1",
+    "details": "New creator registered: creator_1790426745258@velora.pub"
+  }
+]
