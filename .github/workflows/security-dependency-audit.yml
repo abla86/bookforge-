@@ -23,4 +23,6 @@ jobs:
             npm install --package-lock-only --ignore-scripts --no-audit --prefix "$dir"
             npm audit --audit-level=high --prefix "$dir"
           done < <(find . -name package.json -not -path '*/node_modules/*' -not -path './.git/*' -print)
-          [ "$found" -eq 0 ] && echo "No npm projects found."
+          if [ "$found" -eq 0 ]; then
+            echo "No npm projects found."
+          fi
